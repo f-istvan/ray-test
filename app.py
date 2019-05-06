@@ -3,6 +3,8 @@ import time
 import os
 from multiprocessing import cpu_count
 
+import multiprocessing
+
 def regular_method():
     time.sleep(sleep)
     return 1
@@ -25,12 +27,21 @@ def run_ray_method():
     end = time.time()
     return results, end - start
 
+def run_apply_async_regular_method():
+    pool = multiprocessing.Pool(number_of_cpus)
+    start = time.time()
+    result_objects = [pool.apply_async(regular_method) for i in range(executions)]
+    results = [r.get() for r in result_objects]
+    pool.close()
+    pool.join()
+    end = time.time()
+    return results, end - start
+
 def print_result(method_type, results, elapsed_time):
     print('\n**************************************')
     print(f'{method_type} method elapsed time: {elapsed_time}')
     print(f'results: {results}')
     print('**************************************\n')
-
 
 if __name__ == "__main__":
     print('Reading environment variables...')
@@ -48,4 +59,7 @@ if __name__ == "__main__":
     print_result('regular', results, elapsed_time)
 
     results, elapsed_time = run_ray_method()
-    print_result('ray', results, elapsed_time)    
+    print_result('ray', results, elapsed_time)
+
+    results, elapsed_time = run_apply_async_regular_method()
+    print_result('apply_async', results, elapsed_time)
